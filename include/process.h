@@ -15,5 +15,6 @@ void get_mem_info(const char *path,mem *info2);
 int process_scan(mem processes[]);
 void pid_name(const char *path,mem *info2);
 void total_memory_read(const char *path_meminfo,mem *info2);
+int memory_sort(const void *a, const void *b);
 
 #endif

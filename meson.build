@@ -12,7 +12,8 @@ executable(
         'src/main.c',
         'src/unit_conversion.c',
         'src/process_object_gtk.c',
-        'src/columnview.c'
+        'src/columnview.c',
+        'src/refresh.c'
     ],
     include_directories: inc,
     dependencies: gtk

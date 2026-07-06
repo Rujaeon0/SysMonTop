@@ -137,3 +137,17 @@ int process_scan(mem processes[]){
 }
 
 
+int memory_sort(const void *a, const void *b){
+
+    const mem *p1 = (const mem *)a;
+    const mem *p2 = (const mem *)b;
+    if(p1->memused < p2->memused)
+        return 1;
+    if(p1->memused > p2->memused)
+        return -1;
+
+    return 0;
+
+}
+
+
