@@ -8,7 +8,7 @@
 
 void get_mem_info(const char *path,mem *info2){
 
-    FILE *mi = fopen(path, "r"); //Memory info/path-->>/proc/x/statm
+    FILE *mi = fopen(path, "r"); //Memory info/path-->>/proc/"path"/statm
     
     if(!mi){
         printf("Error from mi");
@@ -21,8 +21,9 @@ void get_mem_info(const char *path,mem *info2){
     fgets(storem, sizeof(storem), mi);
     
     double long memused;
+    double long virt_total;
     
-    sscanf(storem, "%Lf ",&memused);
+    sscanf(storem, "%Lf %Lf",&virt_total,&memused);
     
     //info2->memfree = memfree;
     info2->memused = memused;

@@ -41,10 +41,6 @@ void system_uptime(long *days, long *hours, long *minutes, long *seconds){
         *minutes = (total_seconds % 3600) / 60;
         *seconds = total_seconds % 60;
 
-
-
     }
 
-    /* long double ticks_per_sec = sysconf(_SC_CLK_TCK);
-    return ticks/ticks_per_sec; */
 }

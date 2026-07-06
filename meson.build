@@ -10,8 +10,14 @@ executable(
         'src/cpu.c',
         'src/process.c',
         'src/main.c',
-        'src/unit_conversion.c'
+        'src/unit_conversion.c',
+        'src/process_object_gtk.c',
+        'src/columnview.c'
     ],
     include_directories: inc,
     dependencies: gtk
 )
+
+
+
+

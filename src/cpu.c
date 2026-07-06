@@ -45,11 +45,8 @@ void get_cpu_info(CPUInfo *info1){
     long Idle_final = idle + iowait;
     long NonIdle_final = user + nice + system + irq + softirq + steal;
     long Total_final = Idle_final + NonIdle_final;
-
     long dell_total = Total_final - Total_initial;
-
     long dell_idle = Idle_final - Idle_initial;
-
     double cpu_usage = ((double)(dell_total - dell_idle)/dell_total)*100;
     info1->cpu_usage = cpu_usage;
 
