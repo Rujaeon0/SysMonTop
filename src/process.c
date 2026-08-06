@@ -1,4 +1,5 @@
 #include "include/process.h"
+#include "unit_conversion.h"
 #include <unistd.h>
 #include <dirent.h>
 #include <stdlib.h>
@@ -121,6 +122,10 @@ int process_scan(mem processes[]){
         snprintf(status, sizeof(status), "/proc/%ld/status", pid);
         pid_name(status,&info2);
         get_mem_info(statm_path, &info2);
+        if(page_to_mib(info2.memused) < 1.0)
+            continue;
+        if (info2.processname[0] == '[')
+            continue;
         processes[c] = info2;
         processes[c].pid = pid;
         c++;
