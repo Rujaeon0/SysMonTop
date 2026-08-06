@@ -24,8 +24,7 @@ static void name_setup(GtkSignalListItemFactory *factory,GtkListItem *list_item,
     GtkWidget *label = gtk_label_new(NULL);
     gtk_list_item_set_child(list_item, label);
 }
-static void
-name_bind(GtkSignalListItemFactory *factory,GtkListItem *list_item,gpointer data)
+static void name_bind(GtkSignalListItemFactory *factory,GtkListItem *list_item,gpointer data)
 {
     ProcessObject *obj = PROCESS_OBJECT(gtk_list_item_get_item(list_item));
 

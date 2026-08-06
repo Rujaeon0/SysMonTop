@@ -13,6 +13,7 @@ executable(
         'src/unit_conversion.c',
         'src/process_object_gtk.c',
         'src/columnview.c',
+        'src/column_refresh.c',
         'src/refresh.c'
     ],
     include_directories: inc,

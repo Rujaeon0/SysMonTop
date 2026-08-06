@@ -1,4 +1,5 @@
 #include "columnview.h"
+#include "column_refresh.h"
 #include "gio/gio.h"
 #include "glib.h"
 #include "process.h"
@@ -7,8 +8,6 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include <appwidgets.h>
-
-
 
 
 
@@ -54,6 +53,7 @@ static void gtkcall(GtkApplication *app, gpointer data){
 
 
     g_timeout_add(1000, refresh_ui, widgets);
+    g_timeout_add(3000, column_refresh, widgets);
 
 
 
