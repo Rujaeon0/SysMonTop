@@ -2,6 +2,7 @@
 #include "column_refresh.h"
 #include "gio/gio.h"
 #include "glib.h"
+#include "glibconfig.h"
 #include "process.h"
 #include "process_object_gtk.h"
 #include "refresh.h"
@@ -28,6 +29,7 @@ static void gtkcall(GtkApplication *app, gpointer data){
     widgets->swap_total = GTK_LABEL(gtk_builder_get_object(builder, "virt_mem_loading"));
     widgets->swap_free = GTK_LABEL(gtk_builder_get_object(builder, "avai_virt_mem_loading"));
     widgets->pid_view = GTK_COLUMN_VIEW(gtk_builder_get_object(builder, "pid_view_loading"));
+    widgets->process_scroll = GTK_SCROLLED_WINDOW(gtk_builder_get_object(builder, "process_scroll"));
     widgets->uptime = GTK_LABEL(gtk_builder_get_object(builder, "system_uptime_loading"));
 
 
@@ -36,10 +38,12 @@ static void gtkcall(GtkApplication *app, gpointer data){
     int count = process_scan(processes);
     qsort(processes,count,sizeof(mem),memory_sort);
     widgets->store = g_list_store_new(PROCESS_TYPE_OBJECT);
+    widgets->process_map = g_hash_table_new(g_direct_hash, g_direct_equal);
     for(int i = 0; i < count ; i++){
         ProcessObject *obj = process_object_new();
         obj->process = processes[i];
         g_list_store_append(widgets->store, obj);
+        g_hash_table_insert(widgets->process_map,GINT_TO_POINTER((gint)processes[i].pid),g_object_ref(obj));
         g_object_unref(obj);
         
     }

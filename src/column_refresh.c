@@ -2,14 +2,37 @@
 #include "gio/gio.h"
 #include "glib-object.h"
 #include "glib.h"
+#include "gtk/gtkshortcut.h"
 #include "gtk/gtksingleselection.h"
 #include "process.h"
 #include "process_object_gtk.h"
 #include <gtk/gtk.h>
 #include <stdlib.h>
 
+
+
+typedef struct {
+  GtkAdjustment *vadj;
+  double position;
+} Scrolldata;
+
+static gboolean restore_scroll(gpointer data){
+  Scrolldata *scroll = data;
+  gtk_adjustment_set_value(scroll->vadj, scroll->position);
+  
+  g_free(scroll);
+
+  return G_SOURCE_REMOVE;
+
+}
+
+
+
 gboolean column_refresh(gpointer data) {
   AppWidgets *widgets = data;
+  //GtkSingleSelection *selection = widgets->selection;
+  GtkAdjustment *vadj = gtk_scrolled_window_get_vadjustment(widgets->process_scroll);
+  double scroll_position = gtk_adjustment_get_value(vadj);
   GtkSingleSelection *selection = widgets->selection;
   guint selected_index = gtk_single_selection_get_selected(selection);
   long selected_pid = -1;
@@ -53,6 +76,13 @@ gboolean column_refresh(gpointer data) {
 
   if (restore_index != GTK_INVALID_LIST_POSITION)
     gtk_single_selection_set_selected(selection, restore_index);
+
+  Scrolldata *scroll = g_new(Scrolldata,1);
+  scroll->vadj = vadj;
+  scroll->position = scroll_position;
+
+  g_idle_add(restore_scroll,scroll);
+
 
   return G_SOURCE_CONTINUE;
 }

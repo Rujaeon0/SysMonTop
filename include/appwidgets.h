@@ -13,7 +13,8 @@ typedef struct {
     GListStore *store;
     GtkColumnView *pid_view;
     GtkSingleSelection *selection;
-
+    GtkScrolledWindow *process_scroll;
+    GHashTable *process_map;
 } AppWidgets;
 
 

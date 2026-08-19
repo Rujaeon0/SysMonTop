@@ -14,7 +14,8 @@ executable(
         'src/process_object_gtk.c',
         'src/columnview.c',
         'src/column_refresh.c',
-        'src/refresh.c'
+        'src/refresh.c',
+        'src/network.c'
     ],
     include_directories: inc,
     dependencies: gtk
