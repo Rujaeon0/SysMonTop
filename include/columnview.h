@@ -3,5 +3,6 @@
 #include <gtk/gtk.h>
 
 void setup_process_columnview(GtkColumnView *view);
+void setup_network_columnview(GtkColumnView *view);
 
 #endif

@@ -179,17 +179,28 @@
           </object>
         </child>
         <child>
-          <object class="GtkScrolledWindow" id = "process_scroll">
-            <property name="hexpand">True</property>
-            <property name="max-content-height">0</property>
-            <property name="max-content-width">0</property>
-            <property name="min-content-height">0</property>
-            <property name="min-content-width">0</property>
-            <property name="vexpand">True</property>
+          <object class="GtkPaned" id="columns">
             <child>
-              <object class="GtkColumnView" id="pid_view_loading">
+              <object class="GtkScrolledWindow" id="network">
+                <child>
+                  <object class="GtkColumnView" id="network_view"/>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkScrolledWindow" id="process_scroll">
                 <property name="hexpand">True</property>
+                <property name="max-content-height">0</property>
+                <property name="max-content-width">0</property>
+                <property name="min-content-height">0</property>
+                <property name="min-content-width">0</property>
                 <property name="vexpand">True</property>
+                <child>
+                  <object class="GtkColumnView" id="pid_view_loading">
+                    <property name="hexpand">True</property>
+                    <property name="vexpand">True</property>
+                  </object>
+                </child>
               </object>
             </child>
           </object>

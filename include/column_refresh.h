@@ -3,5 +3,6 @@
 #include <gtk/gtk.h>
 
 gboolean column_refresh(gpointer data);
+gboolean network_refresh(gpointer data);
 
 #endif

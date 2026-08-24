@@ -15,7 +15,8 @@ executable(
         'src/columnview.c',
         'src/column_refresh.c',
         'src/refresh.c',
-        'src/network.c'
+        'src/network.c',
+        'src/network_object_gtk.c'
     ],
     include_directories: inc,
     dependencies: gtk

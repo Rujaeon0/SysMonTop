@@ -2,5 +2,5 @@
 <!DOCTYPE cambalache-project SYSTEM "cambalache-project.dtd">
 <!-- Created with Cambalache 1.0.3 -->
 <cambalache-project version="1.0.0" target_tk="gtk-4.0" depends="casilda-1.0,libadwaita-1,webkitgtk-6.0">
-  <ui filename="ui/SysMonTop.ui" sha256="8ac86d81d1075083c6d7c3049c716847eb9a50ac9dcd336392e41ab040a61741"/>
+  <ui filename="ui/SysMonTop.ui" sha256="ed2a3a28936f258ea785def634889f2ecba0d4ff19ee23ea6fd5d772f8365afe"/>
 </cambalache-project>

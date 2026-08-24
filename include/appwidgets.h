@@ -12,9 +12,13 @@ typedef struct {
     GtkLabel *uptime;
     GListStore *store;
     GtkColumnView *pid_view;
+    GtkColumnView *network_view;
     GtkSingleSelection *selection;
     GtkScrolledWindow *process_scroll;
+    GtkScrolledWindow *network;
+    GListStore *network_store;
     GHashTable *process_map;
+    GtkPaned *paned;
 } AppWidgets;
 
 

@@ -1,4 +1,6 @@
 #include "appwidgets.h"
+#include "network.h"
+#include "network_object_gtk.h"
 #include "gio/gio.h"
 #include "glib-object.h"
 #include "glib.h"
@@ -26,7 +28,25 @@ static gboolean restore_scroll(gpointer data){
 
 }
 
+gboolean network_refresh(gpointer data){
+    AppWidgets *widgets = data;
 
+    NetworkIO network_info[20];
+    int net_count = network_usage("/proc/net/dev",20,network_info);
+
+    for(int i = 0; i < net_count; i++){
+
+        NetworkObject *obj =
+            g_list_model_get_item(G_LIST_MODEL(widgets->network_store),i);
+
+        if(obj){
+            network_object_set_network(obj,&network_info[i]);
+            g_object_unref(obj);
+        }
+    }
+
+    return G_SOURCE_CONTINUE;
+}
 
 gboolean column_refresh(gpointer data) {
   AppWidgets *widgets = data;
@@ -57,6 +77,8 @@ gboolean column_refresh(gpointer data) {
     g_list_store_append(widgets->store, obj);
     g_object_unref(obj);
   }
+
+
 
   guint restore_index = GTK_INVALID_LIST_POSITION;
 
