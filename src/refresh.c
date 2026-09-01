@@ -10,6 +10,9 @@
 #include "unit_conversion.h"
 #include <gtk/gtk.h>
 #include <stdio.h>
+#include "storage.h"
+#include "graph.h"
+
 
 gboolean refresh_ui(gpointer data){
     AppWidgets *widgets = data;
@@ -32,6 +35,17 @@ gboolean refresh_ui(gpointer data){
     snprintf(buffer_full,sizeof(buffer_full),"%.2Lf GiB",kib_to_gib(sys_mem.swap_free));
     gtk_label_set_text(widgets->swap_free, buffer_full);
 
+    double mem_percent = 0.0;
+    if (sys_mem.total_memory > 0)
+        mem_percent = ((double)(sys_mem.total_memory - sys_mem.available_memory)
+                        / (double)sys_mem.total_memory) * 100.0;
+    graph_push_value(&widgets->memory_history, mem_percent);
+    gtk_widget_queue_draw(GTK_WIDGET(widgets->memory_graph));
+
+    double storage_percent = get_storage_usage_percentage(widgets->selected_storage_path);
+    graph_push_value(&widgets->storage_history, storage_percent);
+    gtk_widget_queue_draw(GTK_WIDGET(widgets->storage_graph));
+
     long d,h,m,s;
     system_uptime(&d, &h, &m, &s);
     snprintf(buffer_full, sizeof(buffer_full),"%ld Days %ld Hours %ld Minutes %ld Seconds",d,h,m,s);
@@ -48,11 +62,5 @@ gboolean refresh_ui(gpointer data){
         }
     }
 
-
-
-return G_SOURCE_CONTINUE;
-
+    return G_SOURCE_CONTINUE;
 }
-
-
-

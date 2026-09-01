@@ -1,6 +1,0 @@
-<?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<!DOCTYPE cambalache-project SYSTEM "cambalache-project.dtd">
-<!-- Created with Cambalache 1.0.3 -->
-<cambalache-project version="1.0.0" target_tk="gtk-4.0" depends="casilda-1.0,libadwaita-1,webkitgtk-6.0">
-  <ui filename="ui/SysMonTop.ui" sha256="ed2a3a28936f258ea785def634889f2ecba0d4ff19ee23ea6fd5d772f8365afe"/>
-</cambalache-project>

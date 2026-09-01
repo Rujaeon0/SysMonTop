@@ -65,3 +65,12 @@ compile_commands.json
 
 #Cached
 .cache/
+
+# Generated from .blp via blueprint-compiler — do not commit
+ui/SysMonTop.ui
+ui/workbench.vala
+ui/settings
+ui/jsconfig.json
+#Cambalache
+
+*.cmb

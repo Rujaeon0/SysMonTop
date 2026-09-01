@@ -3,6 +3,8 @@
 #include "gio/gio.h"
 #include "glib.h"
 #include "glibconfig.h"
+#include "gtk/gtkdropdown.h"
+#include "gtk/gtkexpression.h"
 #include "gtk/gtksingleselection.h"
 #include "network.h"
 #include "network_object_gtk.h"
@@ -12,11 +14,29 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include <appwidgets.h>
+#include "graph.h"
+#include "storage.h"
+
+static void storage_selection_changed(GtkDropDown *dropdown, GParamSpec *pspec, gpointer data){
+    AppWidgets *widgets = data;
+    guint selected = gtk_drop_down_get_selected(dropdown);
+
+    if (selected == GTK_INVALID_LIST_POSITION || selected >= (guint)widgets->storage_device_count)
+        return;
+
+    snprintf(widgets->selected_storage_path, STORAGE_PATH_LEN, "%s",widgets->storage_devices[selected].mount_point);
+
+    // reset history so the graph doesn't show a misleading scale carried over from the old device
+    graph_history_init(&widgets->storage_history);
+    widgets->storage_history.fixed_max = 100.0;
+}
 
 
 static void lock_paned_position(GtkPaned *paned, GParamSpec *pspec, gpointer data){
     gtk_paned_set_position(paned,805);
 }
+
+
 
 static void gtkcall(GtkApplication *app, gpointer data){
 
@@ -41,6 +61,25 @@ static void gtkcall(GtkApplication *app, gpointer data){
     widgets->network_store = g_list_store_new(NETWORK_TYPE_OBJECT);
     widgets->uptime = GTK_LABEL(gtk_builder_get_object(builder, "system_uptime_loading"));
     widgets->paned = GTK_PANED(gtk_builder_get_object(builder, "columns"));
+    widgets->storage_graph = GTK_DRAWING_AREA(gtk_builder_get_object(builder, "storage_graph"));
+    widgets->memory_graph = GTK_DRAWING_AREA(gtk_builder_get_object(builder, "memory_graph"));
+    widgets->network_graph = GTK_DRAWING_AREA(gtk_builder_get_object(builder, "network_graph"));
+    widgets->storage_selector = GTK_DROP_DOWN(gtk_builder_get_object(builder, "storage_selector"));
+    widgets->storage_device_count = storage_list_devices(widgets->storage_devices, MAX_STORAGE_DEVICES);
+    
+    graph_history_init(&widgets->storage_history);
+    graph_history_init(&widgets->memory_history);
+    graph_history_init(&widgets->network_history);
+
+    widgets->storage_history.fixed_max = 100.0;
+    widgets->memory_history.fixed_max = 100.0;
+    widgets->network_history.fixed_max = 0.0;
+    
+
+    graph_setup(widgets->storage_graph, &widgets->storage_history);
+    graph_setup(widgets->memory_graph, &widgets->memory_history);
+    graph_setup(widgets->network_graph, &widgets->network_history);
+
     gtk_paned_set_position(widgets->paned,475);
     gtk_widget_set_hexpand(GTK_WIDGET(widgets->paned),TRUE);
     g_signal_connect(widgets->paned,"notify::position",G_CALLBACK(lock_paned_position),NULL);
@@ -82,6 +121,24 @@ static void gtkcall(GtkApplication *app, gpointer data){
     setup_network_columnview(widgets->network_view);
 
 
+    GtkStringList *storage_list_model = gtk_string_list_new(NULL);
+    for(int i = 0; i < widgets->storage_device_count; i++){
+        char label[400];
+        snprintf(label,sizeof(label), "%s (%s)", widgets->storage_devices[i].mount_point,widgets->storage_devices[i].fs_type);
+        gtk_string_list_append(storage_list_model,label);
+    }
+
+    gtk_drop_down_set_model(widgets->storage_selector, G_LIST_MODEL(storage_list_model));
+    g_object_unref(storage_list_model);
+
+    gtk_drop_down_set_expression(widgets->storage_selector, gtk_property_expression_new(GTK_TYPE_STRING_OBJECT, NULL , "string"));
+    if(widgets->storage_device_count > 0){
+        snprintf(widgets->selected_storage_path, STORAGE_PATH_LEN, "%s",widgets->storage_devices[0].mount_point);
+        gtk_drop_down_set_selected(widgets->storage_selector, 0);
+
+    }
+
+    g_signal_connect(widgets->storage_selector, "notify::selected",G_CALLBACK(storage_selection_changed),widgets);
 
     g_timeout_add(1000, refresh_ui, widgets);
     g_timeout_add(3000, column_refresh, widgets);

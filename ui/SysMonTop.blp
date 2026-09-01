@@ -1,0 +1,257 @@
+using Gtk 4.0;
+
+ApplicationWindow main_window {
+  Box {
+    orientation: vertical;
+
+    Grid {
+      column-homogeneous: true;
+      column-spacing: 10;
+      halign: center;
+      height-request: 0;
+      hexpand: true;
+      margin-bottom: 18;
+      margin-end: 20;
+      margin-start: 20;
+      margin-top: 10;
+      row-spacing: 3;
+      valign: start;
+
+      Label system_uptime {
+        halign: center;
+        label: "Uptime:";
+
+        layout {
+          column: "0";
+          row: "0";
+        }
+      }
+
+      Label total_ram {
+        label: "Total RAM:";
+
+        layout {
+          column: "0";
+          column-span: "1";
+          row: "1";
+          row-span: "1";
+        }
+      }
+
+      Label virtual_mem {
+        label: "Total Virtual Memory:";
+
+        layout {
+          column: "0";
+          column-span: "1";
+          row: "2";
+          row-span: "1";
+        }
+      }
+
+      Label system_uptime_loading {
+        label: "Loading...";
+
+        layout {
+          column: "1";
+          column-span: "1";
+          row: "0";
+          row-span: "1";
+        }
+      }
+
+      Label total_ram_loading {
+        label: "Loading...";
+
+        layout {
+          column: "1";
+          column-span: "1";
+          row: "1";
+          row-span: "1";
+        }
+      }
+
+      Label cpu_usage {
+        label: "CPU Usage:";
+
+        layout {
+          column: "3";
+          column-span: "1";
+          row: "0";
+          row-span: "1";
+        }
+      }
+
+      Label cpu_usage_loading {
+        label: "Loading...";
+
+        layout {
+          column: "4";
+          column-span: "1";
+          row: "0";
+          row-span: "1";
+        }
+      }
+
+      Label available_ram {
+        label: "Available RAM:";
+
+        layout {
+          column: "3";
+          column-span: "1";
+          row: "1";
+          row-span: "1";
+        }
+      }
+
+      Label availble_ram_loading {
+        label: "Loading...";
+
+        layout {
+          column: "4";
+          column-span: "1";
+          row: "1";
+          row-span: "1";
+        }
+      }
+
+      Label virt_mem_loading {
+        label: "Loading...";
+
+        layout {
+          column: "1";
+          column-span: "1";
+          row: "2";
+          row-span: "1";
+        }
+      }
+
+      Label available_virt_mem {
+        label: "Available Virtual Memory:";
+
+        layout {
+          column: "3";
+          column-span: "1";
+          row: "2";
+          row-span: "1";
+        }
+      }
+
+      Label avai_virt_mem_loading {
+        label: "Loading...";
+
+        layout {
+          column: "4";
+          column-span: "1";
+          row: "2";
+          row-span: "1";
+        }
+      }
+
+      Separator {
+        margin-bottom: 12;
+        margin-end: 50;
+        margin-start: 42;
+        valign: baseline_fill;
+
+        layout {
+          column: "2";
+          row: "0";
+          row-span: "5";
+        }
+      }
+
+      Separator {
+        margin-top: 2;
+        valign: end;
+
+        layout {
+          column: "0";
+          column-span: "5";
+          row: "3";
+          row-span: "1";
+        }
+      }
+    }
+
+    Paned columns {
+    ScrolledWindow network {
+    Box {
+    orientation: vertical;
+    spacing: 6;
+
+    Label {
+      label: "Storage Usage";
+      halign: start;
+      margin-start: 6;
+      margin-top: 6;
+    }
+
+    DropDown storage_selector {
+      margin-start: 6;
+      margin-end: 6;
+      halign: start;
+    }
+
+    DrawingArea storage_graph {
+      height-request: 80;
+      hexpand: true;
+      margin-start: 6;
+      margin-end: 6;
+    }
+
+    Label {
+      label: "Memory Usage";
+      halign: start;
+      margin-start: 6;
+    }
+
+    DrawingArea memory_graph {
+      height-request: 80;
+      hexpand: true;
+      margin-start: 6;
+      margin-end: 6;
+    }
+
+    Separator {
+      margin-top: 6;
+      margin-bottom: 6;
+    }
+
+    ColumnView network_view {
+      vexpand: true;
+    }
+
+    Label {
+      label: "Network Usage";
+      halign: start;
+      margin-start: 6;
+      margin-top: 6;
+    }
+
+    DrawingArea network_graph {
+      height-request: 80;
+      hexpand: true;
+      margin-start: 6;
+      margin-end: 6;
+      margin-bottom: 6;
+    }
+  }
+}
+
+      ScrolledWindow process_scroll {
+        hexpand: true;
+        max-content-height: 0;
+        max-content-width: 0;
+        min-content-height: 0;
+        min-content-width: 0;
+        vexpand: true;
+
+        ColumnView pid_view_loading {
+          hexpand: true;
+          vexpand: true;
+        }
+      }
+    }
+  }
+}
