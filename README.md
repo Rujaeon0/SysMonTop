@@ -5,6 +5,10 @@
 <h1 align="center">SysMonTop</h1>
 
 
+![SysMonTop Preview](SysMonTop_preview.gif)
+
+
+
 A lightweight GUI system monitor app built with C and GTK4 for linux.
 
 ---
