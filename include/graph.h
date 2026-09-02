@@ -8,7 +8,8 @@
 typedef struct {
     double values[GRAPH_HISTORY_LEN];
     int head;
-    double fixed_max; // 0.0 = autoscale to current max in buffer, >0 = fixed ceiling (e.g. 100.0 for percentages)
+    double fixed_max;
+    int hover_index;
 } GraphHistory;
 
 void graph_history_init(GraphHistory *hist);

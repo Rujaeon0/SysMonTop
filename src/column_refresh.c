@@ -10,7 +10,7 @@
 #include "process_object_gtk.h"
 #include <gtk/gtk.h>
 #include <stdlib.h>
-#include "graph.h"
+
 
 
 typedef struct {
@@ -34,8 +34,6 @@ gboolean network_refresh(gpointer data){
     NetworkIO network_info[20];
     int net_count = network_usage("/proc/net/dev",20,network_info);
 
-    unsigned long long total_rate = 0;
-
     for(int i = 0; i < net_count; i++){
 
         NetworkObject *obj =
@@ -43,20 +41,15 @@ gboolean network_refresh(gpointer data){
 
         if(obj){
             network_object_set_network(obj,&network_info[i]);
-            total_rate += network_object_get_rx_rate(obj)
-                        + network_object_get_tx_rate(obj);
             g_object_unref(obj);
         }
     }
 
-    graph_push_value(&widgets->network_history, (double)total_rate);
-    gtk_widget_queue_draw(GTK_WIDGET(widgets->network_graph));
-
     return G_SOURCE_CONTINUE;
 }
+
 gboolean column_refresh(gpointer data) {
   AppWidgets *widgets = data;
-  //GtkSingleSelection *selection = widgets->selection;
   GtkAdjustment *vadj = gtk_scrolled_window_get_vadjustment(widgets->process_scroll);
   double scroll_position = gtk_adjustment_get_value(vadj);
   GtkSingleSelection *selection = widgets->selection;
@@ -64,7 +57,7 @@ gboolean column_refresh(gpointer data) {
   long selected_pid = -1;
   if (selected_index != GTK_INVALID_LIST_POSITION) {
     ProcessObject *selected =
-        g_list_model_get_item(G_LIST_MODEL(widgets->store), selected_index);
+        g_list_model_get_item(G_LIST_MODEL(widgets->selection), selected_index);
 
     if (selected) {
       selected_pid = selected->process.pid;
@@ -88,10 +81,10 @@ gboolean column_refresh(gpointer data) {
 
   guint restore_index = GTK_INVALID_LIST_POSITION;
 
-  for (guint i = 0; i < g_list_model_get_n_items(G_LIST_MODEL(widgets->store));
+  for (guint i = 0; i < g_list_model_get_n_items(G_LIST_MODEL(widgets->selection));
        i++) {
 
-    ProcessObject *obj = g_list_model_get_item(G_LIST_MODEL(widgets->store), i);
+    ProcessObject *obj = g_list_model_get_item(G_LIST_MODEL(widgets->selection), i);
 
     if (obj->process.pid == selected_pid) {
       restore_index = i;

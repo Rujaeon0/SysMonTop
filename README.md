@@ -1,4 +1,13 @@
 # SysMonTop
+
+
+<p align="center">
+  <img src="icons/SysMonTop.svg" alt="SysMonTop logo" width="120">
+</p>
+
+<h1 align="center">SysMonTop</h1>
+
+
 A lightweight GUI system monitor app built with C and GTK4 for linux.
 
 ---

@@ -1,0 +1,149 @@
+@define-color bg_base #14171C;
+@define-color bg_surface #1B1F26;
+@define-color border_subtle #262B34;
+@define-color text_primary #E7E9EC;
+@define-color text_secondary #828A97;
+@define-color accent_cyan #4FD1C5;
+@define-color accent_purple #B478FF;
+@define-color accent_pink #FF6AC2;
+@define-color destructive #E5484D;
+
+window {
+    background-color: @bg_base;
+    color: @text_primary;
+    font-size: 13px;
+}
+
+label {
+    color: @text_primary;
+}
+
+.panel-title {
+    font-weight: 600;
+    font-size: 12px;
+    color: @text_secondary;
+}
+
+.secondary-label {
+    color: @text_secondary;
+    font-size: 11px;
+}
+
+.mono {
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+
+.data-value {
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    color: @accent_cyan;
+    font-weight: 500;
+}
+
+.stat-value {
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: @accent_purple;
+}
+
+label.own-process {
+    color: @accent_purple;
+    font-weight: 700;
+}
+
+.hairline {
+    background-color: @border_subtle;
+    min-height: 1px;
+}
+
+/* --- Level bars --- */
+
+levelbar trough {
+    background-color: @bg_surface;
+    border: 1px solid @border_subtle;
+    border-radius: 5px;
+    min-height: 8px;
+    box-shadow: 0 0 8px alpha(@accent_purple, 0.25);
+}
+
+levelbar block.filled {
+    background-image: linear-gradient(90deg, @accent_cyan, @accent_purple 50%, @accent_pink);
+    background-size: 220% 100%;
+    border-radius: 5px;
+    animation: bar-shimmer 4s ease-in-out infinite;
+}
+
+levelbar block.empty {
+    background-color: transparent;
+}
+
+@keyframes bar-shimmer {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+levelbar.warning block.filled {
+    background-image: linear-gradient(90deg, @accent_purple, #E5A84D);
+}
+
+levelbar.critical block.filled {
+    background-image: linear-gradient(90deg, #E5A84D, @destructive);
+}
+
+/* --- Column views --- */
+
+columnview {
+    background-color: transparent;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 12px;
+}
+
+columnview > header {
+    background-color: @bg_surface;
+    border-bottom: 1px solid @border_subtle;
+    font-family: -gtk-system-font;
+    font-weight: 600;
+    font-size: 11px;
+    color: @text_secondary;
+}
+
+columnview row {
+    border-bottom: 1px solid alpha(@border_subtle, 0.5);
+}
+
+columnview row:hover {
+    background-color: alpha(@accent_cyan, 0.05);
+}
+
+columnview row:selected {
+    background-color: alpha(@accent_cyan, 0.12);
+    color: @text_primary;
+}
+
+/* --- Controls --- */
+
+dropdown, button {
+    background-color: @bg_surface;
+    border: 1px solid @border_subtle;
+    border-radius: 4px;
+    color: @text_primary;
+}
+
+button:hover {
+    background-color: alpha(@accent_cyan, 0.08);
+}
+
+button.destructive-action {
+    background-color: alpha(@destructive, 0.12);
+    color: @destructive;
+    border: 1px solid alpha(@destructive, 0.35);
+}
+
+button.destructive-action:hover {
+    background-color: alpha(@destructive, 0.2);
+}
+
+separator {
+    background-color: @border_subtle;
+}

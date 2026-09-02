@@ -8,6 +8,7 @@
 #include "unit_conversion.h"
 #include "network_object_gtk.h"
 #include <stdio.h>
+#include <unistd.h>
 
 
 static void pid_setup(GtkSignalListItemFactory *factory,GtkListItem *list_item,gpointer data){
@@ -24,6 +25,11 @@ static void pid_bind(GtkSignalListItemFactory *factory,GtkListItem *list_item,gp
 
     snprintf(buffer_pid,sizeof(buffer_pid),"%ld",obj->process.pid);
     gtk_label_set_text(label,buffer_pid);
+
+    if (obj->process.pid == (long)getpid())
+        gtk_widget_add_css_class(GTK_WIDGET(label), "own-process");
+    else
+        gtk_widget_remove_css_class(GTK_WIDGET(label), "own-process");
 }
 
 
@@ -38,6 +44,11 @@ static void name_bind(GtkSignalListItemFactory *factory,GtkListItem *list_item,g
     GtkLabel *label = GTK_LABEL(gtk_list_item_get_child(list_item));
 
     gtk_label_set_text(label,obj->process.processname);
+
+    if (obj->process.pid == (long)getpid())
+        gtk_widget_add_css_class(GTK_WIDGET(label), "own-process");
+    else
+        gtk_widget_remove_css_class(GTK_WIDGET(label), "own-process");
 }
 
 
@@ -55,6 +66,32 @@ static void memory_bind(GtkSignalListItemFactory *factory,GtkListItem *list_item
 
     snprintf(buffer_mem,sizeof(buffer_mem),"%.2Lf MiB",page_to_mib(obj->process.memused));
     gtk_label_set_text(label,buffer_mem);
+
+    if (obj->process.pid == (long)getpid())
+        gtk_widget_add_css_class(GTK_WIDGET(label), "own-process");
+    else
+        gtk_widget_remove_css_class(GTK_WIDGET(label), "own-process");
+}
+
+
+static int compare_pid(gconstpointer a, gconstpointer b, gpointer user_data){
+    const ProcessObject *pa = PROCESS_OBJECT((gpointer)a);
+    const ProcessObject *pb = PROCESS_OBJECT((gpointer)b);
+    return (pa->process.pid > pb->process.pid) - (pa->process.pid < pb->process.pid);
+}
+
+static int compare_name(gconstpointer a, gconstpointer b, gpointer user_data){
+    const ProcessObject *pa = PROCESS_OBJECT((gpointer)a);
+    const ProcessObject *pb = PROCESS_OBJECT((gpointer)b);
+    return g_strcmp0(pa->process.processname, pb->process.processname);
+}
+
+static int compare_memory(gconstpointer a, gconstpointer b, gpointer user_data){
+    const ProcessObject *pa = PROCESS_OBJECT((gpointer)a);
+    const ProcessObject *pb = PROCESS_OBJECT((gpointer)b);
+    if (pa->process.memused > pb->process.memused) return -1;
+    if (pa->process.memused < pb->process.memused) return 1;
+    return 0;
 }
 
 
@@ -67,8 +104,12 @@ void setup_process_columnview(GtkColumnView *view){
 
     GtkColumnViewColumn *pid_column = gtk_column_view_column_new("PID",pid_factory);
 
-    gtk_column_view_column_set_fixed_width(pid_column,200);
+    gtk_column_view_column_set_fixed_width(pid_column,80);
     gtk_column_view_append_column(view,pid_column);
+
+    GtkSorter *pid_sorter = GTK_SORTER(gtk_custom_sorter_new((GCompareDataFunc)compare_pid, NULL, NULL));
+    gtk_column_view_column_set_sorter(pid_column, pid_sorter);
+    g_object_unref(pid_sorter);
 
 
     GtkListItemFactory *name_factory = gtk_signal_list_item_factory_new();
@@ -78,8 +119,12 @@ void setup_process_columnview(GtkColumnView *view){
 
     GtkColumnViewColumn *name_column = gtk_column_view_column_new("Name",name_factory);
 
-    gtk_column_view_column_set_fixed_width(name_column,600);
+    gtk_column_view_column_set_fixed_width(name_column,220);
     gtk_column_view_append_column(view,name_column);
+
+    GtkSorter *name_sorter = GTK_SORTER(gtk_custom_sorter_new((GCompareDataFunc)compare_name, NULL, NULL));
+    gtk_column_view_column_set_sorter(name_column, name_sorter);
+    g_object_unref(name_sorter);
 
 
     GtkListItemFactory *memory_factory = gtk_signal_list_item_factory_new();
@@ -89,8 +134,12 @@ void setup_process_columnview(GtkColumnView *view){
 
     GtkColumnViewColumn *memory_column = gtk_column_view_column_new("Memory",memory_factory);
 
-    gtk_column_view_column_set_fixed_width(memory_column,150);
+    gtk_column_view_column_set_fixed_width(memory_column,120);
     gtk_column_view_append_column(view,memory_column);
+
+    GtkSorter *memory_sorter = GTK_SORTER(gtk_custom_sorter_new((GCompareDataFunc)compare_memory, NULL, NULL));
+    gtk_column_view_column_set_sorter(memory_column, memory_sorter);
+    g_object_unref(memory_sorter);
 }
 
 
@@ -199,6 +248,7 @@ void setup_network_columnview(GtkColumnView *view){
     GtkColumnViewColumn *interface_column =
         gtk_column_view_column_new("Interface",interface_factory);
 
+    gtk_column_view_column_set_expand(interface_column, TRUE);
     gtk_column_view_append_column(view,interface_column);
 
 
@@ -211,6 +261,7 @@ void setup_network_columnview(GtkColumnView *view){
     GtkColumnViewColumn *rx_rate_column =
         gtk_column_view_column_new("RX Rate",rx_rate_factory);
 
+    gtk_column_view_column_set_expand(rx_rate_column, TRUE);
     gtk_column_view_append_column(view,rx_rate_column);
 
 
@@ -223,5 +274,6 @@ void setup_network_columnview(GtkColumnView *view){
     GtkColumnViewColumn *tx_rate_column =
         gtk_column_view_column_new("TX Rate",tx_rate_factory);
 
+    gtk_column_view_column_set_expand(tx_rate_column, TRUE);
     gtk_column_view_append_column(view,tx_rate_column);
 }

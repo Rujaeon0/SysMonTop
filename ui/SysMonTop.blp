@@ -4,252 +4,343 @@ ApplicationWindow main_window {
   Box {
     orientation: vertical;
 
-    Grid {
-      column-homogeneous: true;
-      column-spacing: 10;
-      halign: center;
-      height-request: 0;
+    Box top_stats_row {
+      orientation: horizontal;
       hexpand: true;
-      margin-bottom: 18;
-      margin-end: 20;
-      margin-start: 20;
-      margin-top: 10;
-      row-spacing: 3;
-      valign: start;
+      margin-top: 14;
+      margin-bottom: 16;
+      margin-start: 24;
+      margin-end: 24;
+      spacing: 0;
 
-      Label system_uptime {
-        halign: center;
-        label: "Uptime:";
+      Box {
+        orientation: vertical;
+        hexpand: true;
+        spacing: 6;
 
-        layout {
-          column: "0";
-          row: "0";
+        Label {
+          label: "CPU";
+          halign: start;
+
+          styles ["secondary-label"]
         }
-      }
 
-      Label total_ram {
-        label: "Total RAM:";
+        Label cpu_usage_loading {
+          label: "Loading...";
+          halign: start;
 
-        layout {
-          column: "0";
-          column-span: "1";
-          row: "1";
-          row-span: "1";
+          styles ["stat-value"]
         }
-      }
 
-      Label virtual_mem {
-        label: "Total Virtual Memory:";
-
-        layout {
-          column: "0";
-          column-span: "1";
-          row: "2";
-          row-span: "1";
-        }
-      }
-
-      Label system_uptime_loading {
-        label: "Loading...";
-
-        layout {
-          column: "1";
-          column-span: "1";
-          row: "0";
-          row-span: "1";
-        }
-      }
-
-      Label total_ram_loading {
-        label: "Loading...";
-
-        layout {
-          column: "1";
-          column-span: "1";
-          row: "1";
-          row-span: "1";
-        }
-      }
-
-      Label cpu_usage {
-        label: "CPU Usage:";
-
-        layout {
-          column: "3";
-          column-span: "1";
-          row: "0";
-          row-span: "1";
-        }
-      }
-
-      Label cpu_usage_loading {
-        label: "Loading...";
-
-        layout {
-          column: "4";
-          column-span: "1";
-          row: "0";
-          row-span: "1";
-        }
-      }
-
-      Label available_ram {
-        label: "Available RAM:";
-
-        layout {
-          column: "3";
-          column-span: "1";
-          row: "1";
-          row-span: "1";
-        }
-      }
-
-      Label availble_ram_loading {
-        label: "Loading...";
-
-        layout {
-          column: "4";
-          column-span: "1";
-          row: "1";
-          row-span: "1";
-        }
-      }
-
-      Label virt_mem_loading {
-        label: "Loading...";
-
-        layout {
-          column: "1";
-          column-span: "1";
-          row: "2";
-          row-span: "1";
-        }
-      }
-
-      Label available_virt_mem {
-        label: "Available Virtual Memory:";
-
-        layout {
-          column: "3";
-          column-span: "1";
-          row: "2";
-          row-span: "1";
-        }
-      }
-
-      Label avai_virt_mem_loading {
-        label: "Loading...";
-
-        layout {
-          column: "4";
-          column-span: "1";
-          row: "2";
-          row-span: "1";
+        LevelBar cpu_usage_bar {
+          min-value: 0;
+          max-value: 100;
+          value: 0;
+          hexpand: true;
         }
       }
 
       Separator {
-        margin-bottom: 12;
-        margin-end: 50;
-        margin-start: 42;
-        valign: baseline_fill;
+        orientation: vertical;
+        margin-start: 20;
+        margin-end: 20;
+      }
 
-        layout {
-          column: "2";
-          row: "0";
-          row-span: "5";
+      Box {
+        orientation: vertical;
+        hexpand: true;
+        spacing: 6;
+
+        Label {
+          label: "Memory";
+          halign: start;
+
+          styles ["secondary-label"]
+        }
+
+        Label total_ram_loading {
+          label: "Loading...";
+          halign: start;
+
+          styles ["stat-value"]
+        }
+
+        Label availble_ram_loading {
+          label: "Loading...";
+          halign: start;
+
+          styles ["secondary-label"]
+        }
+
+        LevelBar memory_usage_bar {
+          min-value: 0;
+          max-value: 100;
+          value: 0;
+          hexpand: true;
         }
       }
 
       Separator {
-        margin-top: 2;
-        valign: end;
+        orientation: vertical;
+        margin-start: 20;
+        margin-end: 20;
+      }
 
-        layout {
-          column: "0";
-          column-span: "5";
-          row: "3";
-          row-span: "1";
+      Box {
+        orientation: vertical;
+        hexpand: true;
+        spacing: 6;
+
+        Label {
+          label: "Swap";
+          halign: start;
+
+          styles ["secondary-label"]
+        }
+
+        Label virt_mem_loading {
+          label: "Loading...";
+          halign: start;
+
+          styles ["stat-value"]
+        }
+
+        Label avai_virt_mem_loading {
+          label: "Loading...";
+          halign: start;
+
+          styles ["secondary-label"]
+        }
+
+        LevelBar swap_usage_bar {
+          min-value: 0;
+          max-value: 100;
+          value: 0;
+          hexpand: true;
         }
       }
-    }
-
-    Paned columns {
-    ScrolledWindow network {
-    Box {
-    orientation: vertical;
-    spacing: 6;
-
-    Label {
-      label: "Storage Usage";
-      halign: start;
-      margin-start: 6;
-      margin-top: 6;
-    }
-
-    DropDown storage_selector {
-      margin-start: 6;
-      margin-end: 6;
-      halign: start;
-    }
-
-    DrawingArea storage_graph {
-      height-request: 80;
-      hexpand: true;
-      margin-start: 6;
-      margin-end: 6;
-    }
-
-    Label {
-      label: "Memory Usage";
-      halign: start;
-      margin-start: 6;
-    }
-
-    DrawingArea memory_graph {
-      height-request: 80;
-      hexpand: true;
-      margin-start: 6;
-      margin-end: 6;
     }
 
     Separator {
-      margin-top: 6;
-      margin-bottom: 6;
+      styles ["hairline"]
     }
 
-    ColumnView network_view {
-      vexpand: true;
-    }
+    Paned columns {
+      ScrolledWindow network {
+        Box {
+          orientation: vertical;
+          spacing: 6;
 
-    Label {
-      label: "Network Usage";
-      halign: start;
-      margin-start: 6;
-      margin-top: 6;
-    }
+          Label {
+            label: "Storage Usage";
+            halign: start;
+            margin-start: 6;
+            margin-top: 6;
 
-    DrawingArea network_graph {
-      height-request: 80;
-      hexpand: true;
-      margin-start: 6;
-      margin-end: 6;
-      margin-bottom: 6;
-    }
-  }
-}
+            styles ["panel-title"]
+          }
 
-      ScrolledWindow process_scroll {
-        hexpand: true;
-        max-content-height: 0;
-        max-content-width: 0;
-        min-content-height: 0;
-        min-content-width: 0;
-        vexpand: true;
+          DropDown storage_selector {
+            margin-start: 6;
+            margin-end: 6;
+            halign: start;
+          }
 
-        ColumnView pid_view_loading {
+          DrawingArea storage_graph {
+            height-request: 110;
+            hexpand: true;
+            margin-start: 6;
+            margin-end: 6;
+          }
+
+          Label {
+            label: "Memory Usage";
+            halign: start;
+            margin-start: 6;
+
+            styles ["panel-title"]
+          }
+
+          DrawingArea memory_graph {
+            height-request: 110;
+            hexpand: true;
+            margin-start: 6;
+            margin-end: 6;
+          }
+
+          Separator {
+            margin-top: 6;
+            margin-bottom: 6;
+          }
+
+          ColumnView network_view {
+            vexpand: true;
+          }
+
+          Label {
+            label: "Network Usage";
+            halign: start;
+            margin-start: 6;
+            margin-top: 6;
+
+            styles ["panel-title"]
+          }
+
+          DrawingArea network_graph {
+            height-request: 110;
+            hexpand: true;
+            margin-start: 6;
+            margin-end: 6;
+            margin-bottom: 6;
+          }
+        }
+      }
+
+      Paned inner {
+        ScrolledWindow process_scroll {
           hexpand: true;
           vexpand: true;
+
+          ColumnView pid_view_loading {
+            hexpand: true;
+            vexpand: true;
+          }
+        }
+
+        Box process_details_panel {
+          orientation: vertical;
+          hexpand: true;
+          vexpand: true;
+
+          Box detail_upper {
+            orientation: vertical;
+            spacing: 8;
+            margin-top: 10;
+            margin-start: 10;
+            margin-end: 10;
+
+            Label {
+              label: "Process Details";
+              halign: start;
+
+              styles ["title-4"]
+            }
+
+            Separator {
+              margin-bottom: 6;
+            }
+
+            Stack detail_stack {
+              visible-child-name: "empty";
+              vhomogeneous: false;
+
+              StackPage {
+                name: "empty";
+
+                child: Box {
+                  orientation: vertical;
+                  valign: center;
+                  margin-top: 30;
+
+                  Label {
+                    label: "Double-click a process to inspect it";
+                    halign: center;
+                    wrap: true;
+
+                    styles ["secondary-label"]
+                  }
+                };
+              }
+
+              StackPage {
+                name: "details";
+
+                child: Box {
+                  orientation: vertical;
+                  spacing: 8;
+
+                  Label detail_pid_label {
+                    halign: start;
+                    label: "PID: —";
+
+                    styles ["data-value"]
+                  }
+
+                  Label detail_name_label {
+                    halign: start;
+                    label: "Name: —";
+                  }
+
+                  Label detail_ram_label {
+                    halign: start;
+                    label: "RAM: —";
+
+                    styles ["data-value"]
+                  }
+
+                  Label detail_cpu_label {
+                    halign: start;
+                    label: "CPU: —";
+
+                    styles ["data-value"]
+                  }
+
+                  Box {
+                    orientation: horizontal;
+                    spacing: 8;
+                    margin-top: 10;
+
+                    Button kill_button {
+                      label: "Terminate";
+                    }
+
+                    Button force_kill_button {
+                      label: "Force Kill";
+
+                      styles ["destructive-action"]
+                    }
+                  }
+
+                  Label detail_status_label {
+                    halign: start;
+                    margin-top: 6;
+                    label: "";
+
+                    styles ["secondary-label"]
+                  }
+                };
+              }
+            }
+
+            Separator {
+              margin-top: 10;
+              margin-bottom: 4;
+            }
+
+            Box {
+              orientation: horizontal;
+              spacing: 8;
+
+              Label {
+                label: "Uptime";
+                halign: start;
+                hexpand: true;
+
+                styles ["secondary-label"]
+              }
+
+              Label overview_uptime_label {
+                label: "—";
+                halign: end;
+
+                styles ["data-value"]
+              }
+            }
+          }
+
+          Box detail_lower {
+            vexpand: true;
+          }
         }
       }
     }

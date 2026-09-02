@@ -7,11 +7,13 @@
 #include "network_object_gtk.h"
 #include "glib.h"
 #include "process.h"
+#include "process_object_gtk.h"
 #include "unit_conversion.h"
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include "storage.h"
 #include "graph.h"
+#include "per_cpu.h"
 
 
 gboolean refresh_ui(gpointer data){
@@ -46,10 +48,40 @@ gboolean refresh_ui(gpointer data){
     graph_push_value(&widgets->storage_history, storage_percent);
     gtk_widget_queue_draw(GTK_WIDGET(widgets->storage_graph));
 
+    gtk_level_bar_set_value(widgets->cpu_usage_bar, cpu_info.cpu_usage);
+    gtk_level_bar_set_value(widgets->memory_usage_bar, mem_percent);
+
+    double swap_percent = 0.0;
+    if (sys_mem.swap_total > 0)
+        swap_percent = ((double)(sys_mem.swap_total - sys_mem.swap_free)
+                         / (double)sys_mem.swap_total) * 100.0;
+    gtk_level_bar_set_value(widgets->swap_usage_bar, swap_percent);
+
     long d,h,m,s;
     system_uptime(&d, &h, &m, &s);
     snprintf(buffer_full, sizeof(buffer_full),"%ld Days %ld Hours %ld Minutes %ld Seconds",d,h,m,s);
-    gtk_label_set_text(widgets->uptime, buffer_full);
+    gtk_label_set_text(widgets->overview_uptime_label, buffer_full);
+
+    if (widgets->selected_detail_cpu > 0){
+        double cpu_percent = per_percentage(&widgets->detail_cpu_tracker, widgets->selected_detail_cpu);
+
+        if (cpu_percent < 0.0){
+            gtk_label_set_text(widgets->detail_cpu_label, "CPU: process ended");
+        } else {
+            char detail_buffer[64];
+            snprintf(detail_buffer, sizeof(detail_buffer), "CPU: %.2f %%", cpu_percent);
+            gtk_label_set_text(widgets->detail_cpu_label, detail_buffer);
+        }
+
+        ProcessObject *obj = g_hash_table_lookup(widgets->process_map,
+            GINT_TO_POINTER((gint)widgets->selected_detail_cpu));
+
+        if (obj){
+            char detail_buffer[64];
+            snprintf(detail_buffer, sizeof(detail_buffer), "RAM: %.2Lf MiB", page_to_mib(obj->process.memused));
+            gtk_label_set_text(widgets->detail_ram_label, detail_buffer);
+        }
+    }
 
     NetworkIO network_info[20];
     int net_count = network_usage("/proc/net/dev",20,network_info);
@@ -62,5 +94,8 @@ gboolean refresh_ui(gpointer data){
         }
     }
 
-    return G_SOURCE_CONTINUE;
+
+
+return G_SOURCE_CONTINUE;
+
 }

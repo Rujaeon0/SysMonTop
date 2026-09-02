@@ -32,6 +32,8 @@ executable(
         'src/network_object_gtk.c',
         'src/graph.c',
         'src/storage.c',
+        'src/pkill.c',
+        'src/per_cpu.c',
         ui_files
     ],
     include_directories: inc,

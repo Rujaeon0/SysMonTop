@@ -3,8 +3,6 @@
 #include "gio/gio.h"
 #include "glib.h"
 #include "glibconfig.h"
-#include "gtk/gtkdropdown.h"
-#include "gtk/gtkexpression.h"
 #include "gtk/gtksingleselection.h"
 #include "network.h"
 #include "network_object_gtk.h"
@@ -15,7 +13,19 @@
 #include <stdio.h>
 #include <appwidgets.h>
 #include "graph.h"
+#include "per_cpu.h"
 #include "storage.h"
+#include "pkill.h"
+#include "unit_conversion.h"
+
+
+static void lock_paned_position(GtkPaned *paned, GParamSpec *pspec, gpointer data){
+    gtk_paned_set_position(paned,805);
+}
+
+static void lock_inner_paned_position(GtkPaned *paned, GParamSpec *pspec, gpointer data){
+    gtk_paned_set_position(paned,480);
+}
 
 static void storage_selection_changed(GtkDropDown *dropdown, GParamSpec *pspec, gpointer data){
     AppWidgets *widgets = data;
@@ -24,19 +34,125 @@ static void storage_selection_changed(GtkDropDown *dropdown, GParamSpec *pspec, 
     if (selected == GTK_INVALID_LIST_POSITION || selected >= (guint)widgets->storage_device_count)
         return;
 
-    snprintf(widgets->selected_storage_path, STORAGE_PATH_LEN, "%s",widgets->storage_devices[selected].mount_point);
+    snprintf(widgets->selected_storage_path, STORAGE_PATH_LEN, "%s",
+             widgets->storage_devices[selected].mount_point);
 
-    // reset history so the graph doesn't show a misleading scale carried over from the old device
     graph_history_init(&widgets->storage_history);
     widgets->storage_history.fixed_max = 100.0;
 }
 
+static void process_row_activated(GtkColumnView *view, guint position, gpointer data){
+    AppWidgets *widgets = data;
 
-static void lock_paned_position(GtkPaned *paned, GParamSpec *pspec, gpointer data){
-    gtk_paned_set_position(paned,805);
+    ProcessObject *obj = g_list_model_get_item(G_LIST_MODEL(widgets->selection), position);
+    if (!obj)
+        return;
+
+    widgets->selected_detail_cpu = obj->process.pid;
+    tracker_init(&widgets->detail_cpu_tracker);
+
+    char buffer[128];
+
+    snprintf(buffer, sizeof(buffer), "PID: %ld", obj->process.pid);
+    gtk_label_set_text(widgets->detail_pid_label, buffer);
+
+    snprintf(buffer, sizeof(buffer), "Name: %s", obj->process.processname);
+    gtk_label_set_text(widgets->detail_name_label, buffer);
+
+    snprintf(buffer, sizeof(buffer), "RAM: %.2Lf MiB", page_to_mib(obj->process.memused));
+    gtk_label_set_text(widgets->detail_ram_label, buffer);
+
+    gtk_label_set_text(widgets->detail_cpu_label, "CPU: measuring...");
+    gtk_label_set_text(widgets->detail_status_label, "");
+
+    gtk_stack_set_visible_child_name(widgets->detail_stack, "details");
+
+    g_object_unref(obj);
 }
 
+static void terminate_dialog_response(GObject *source, GAsyncResult *result, gpointer data){
+    AppWidgets *widgets = data;
+    GtkAlertDialog *dialog = GTK_ALERT_DIALOG(source);
 
+    GError *error = NULL;
+    int button = gtk_alert_dialog_choose_finish(dialog, result, &error);
+
+    if (error){
+        g_error_free(error);
+        return;
+    }
+
+    if (button != 0)
+        return;
+
+    if (widgets->selected_detail_cpu <= 0){
+        gtk_label_set_text(widgets->detail_status_label, "No process selected");
+        return;
+    }
+
+    KillResult r = terminate_process(widgets->selected_detail_cpu);
+    gtk_label_set_text(widgets->detail_status_label, pkill_result_to_string(r));
+
+    if (r == PKILL_SUCCESS)
+        column_refresh(widgets);
+}
+
+static void force_kill_dialog_response(GObject *source, GAsyncResult *result, gpointer data){
+    AppWidgets *widgets = data;
+    GtkAlertDialog *dialog = GTK_ALERT_DIALOG(source);
+
+    GError *error = NULL;
+    int button = gtk_alert_dialog_choose_finish(dialog, result, &error);
+
+    if (error){
+        g_error_free(error);
+        return;
+    }
+
+    if (button != 0)
+        return;
+
+    if (widgets->selected_detail_cpu <= 0){
+        gtk_label_set_text(widgets->detail_status_label, "No process selected");
+        return;
+    }
+
+    KillResult r = force_kill_process(widgets->selected_detail_cpu);
+    gtk_label_set_text(widgets->detail_status_label, pkill_result_to_string(r));
+
+    if (r == PKILL_SUCCESS)
+        column_refresh(widgets);
+}
+
+static void kill_button_clicked(GtkButton *button, gpointer data){
+    AppWidgets *widgets = data;
+
+    GtkAlertDialog *dialog = gtk_alert_dialog_new("Action Terminate - Yes or No?");
+    const char *buttons[] = { "Yes", "No", NULL };
+    gtk_alert_dialog_set_buttons(dialog, buttons);
+    gtk_alert_dialog_set_cancel_button(dialog, 1);
+    gtk_alert_dialog_set_default_button(dialog, 1);
+
+    GtkRoot *root = gtk_widget_get_root(GTK_WIDGET(button));
+    gtk_alert_dialog_choose(dialog, GTK_WINDOW(root), NULL, terminate_dialog_response, widgets);
+
+    g_object_unref(dialog);
+}
+
+static void force_kill_button_clicked(GtkButton *button, gpointer data){
+    AppWidgets *widgets = data;
+
+    GtkAlertDialog *dialog = gtk_alert_dialog_new("Action Force Kill - Yes or No?");
+    const char *buttons[] = { "Yes", "No", NULL };
+    gtk_alert_dialog_set_buttons(dialog, buttons);
+    gtk_alert_dialog_set_cancel_button(dialog, 1);
+    gtk_alert_dialog_set_default_button(dialog, 1);
+
+    GtkRoot *root = gtk_widget_get_root(GTK_WIDGET(button));
+    gtk_alert_dialog_choose(dialog, GTK_WINDOW(root), NULL, force_kill_dialog_response, widgets);
+
+    g_object_unref(dialog);
+}
 
 static void gtkcall(GtkApplication *app, gpointer data){
 
@@ -45,6 +161,16 @@ static void gtkcall(GtkApplication *app, gpointer data){
     GtkApplicationWindow *window = GTK_APPLICATION_WINDOW(gtk_builder_get_object(builder, "main_window"));
 
     gtk_window_set_application(GTK_WINDOW(window), app);
+    gtk_window_set_title(GTK_WINDOW(window), "SysMonTop");
+
+    GtkCssProvider *css_provider = gtk_css_provider_new();
+    gtk_css_provider_load_from_path(css_provider, "ui/style.css");
+    gtk_style_context_add_provider_for_display(
+        gdk_display_get_default(),
+        GTK_STYLE_PROVIDER(css_provider),
+        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION
+    );
+    g_object_unref(css_provider);
 
     AppWidgets *widgets = g_new0(AppWidgets, 1);
 
@@ -59,14 +185,12 @@ static void gtkcall(GtkApplication *app, gpointer data){
     widgets->network_view = GTK_COLUMN_VIEW(gtk_builder_get_object(builder, "network_view"));
     widgets->network = GTK_SCROLLED_WINDOW(gtk_builder_get_object(builder, "network"));
     widgets->network_store = g_list_store_new(NETWORK_TYPE_OBJECT);
-    widgets->uptime = GTK_LABEL(gtk_builder_get_object(builder, "system_uptime_loading"));
     widgets->paned = GTK_PANED(gtk_builder_get_object(builder, "columns"));
+
     widgets->storage_graph = GTK_DRAWING_AREA(gtk_builder_get_object(builder, "storage_graph"));
     widgets->memory_graph = GTK_DRAWING_AREA(gtk_builder_get_object(builder, "memory_graph"));
     widgets->network_graph = GTK_DRAWING_AREA(gtk_builder_get_object(builder, "network_graph"));
-    widgets->storage_selector = GTK_DROP_DOWN(gtk_builder_get_object(builder, "storage_selector"));
-    widgets->storage_device_count = storage_list_devices(widgets->storage_devices, MAX_STORAGE_DEVICES);
-    
+
     graph_history_init(&widgets->storage_history);
     graph_history_init(&widgets->memory_history);
     graph_history_init(&widgets->network_history);
@@ -74,11 +198,70 @@ static void gtkcall(GtkApplication *app, gpointer data){
     widgets->storage_history.fixed_max = 100.0;
     widgets->memory_history.fixed_max = 100.0;
     widgets->network_history.fixed_max = 0.0;
-    
 
     graph_setup(widgets->storage_graph, &widgets->storage_history);
     graph_setup(widgets->memory_graph, &widgets->memory_history);
     graph_setup(widgets->network_graph, &widgets->network_history);
+
+    widgets->storage_selector = GTK_DROP_DOWN(gtk_builder_get_object(builder, "storage_selector"));
+
+    widgets->storage_device_count = storage_list_devices(widgets->storage_devices, MAX_STORAGE_DEVICES);
+
+    GtkStringList *storage_list_model = gtk_string_list_new(NULL);
+    for (int i = 0; i < widgets->storage_device_count; i++){
+        char label[400];
+        snprintf(label, sizeof(label), "%s (%s)",
+                 widgets->storage_devices[i].mount_point,
+                 widgets->storage_devices[i].fs_type);
+        gtk_string_list_append(storage_list_model, label);
+    }
+
+    gtk_drop_down_set_model(widgets->storage_selector, G_LIST_MODEL(storage_list_model));
+    g_object_unref(storage_list_model);
+
+    gtk_drop_down_set_expression(widgets->storage_selector,
+        gtk_property_expression_new(GTK_TYPE_STRING_OBJECT, NULL, "string"));
+
+    if (widgets->storage_device_count > 0){
+        snprintf(widgets->selected_storage_path, STORAGE_PATH_LEN, "%s",
+                 widgets->storage_devices[0].mount_point);
+        gtk_drop_down_set_selected(widgets->storage_selector, 0);
+    }
+
+    g_signal_connect(widgets->storage_selector, "notify::selected",
+                      G_CALLBACK(storage_selection_changed), widgets);
+
+    widgets->inner_paned = GTK_PANED(gtk_builder_get_object(builder, "inner"));
+    gtk_paned_set_position(widgets->inner_paned, 480);
+    gtk_widget_set_hexpand(GTK_WIDGET(widgets->inner_paned), TRUE);
+    g_signal_connect(widgets->inner_paned, "notify::position", G_CALLBACK(lock_inner_paned_position), NULL);
+
+    widgets->detail_stack        = GTK_STACK(gtk_builder_get_object(builder, "detail_stack"));
+    widgets->detail_pid_label    = GTK_LABEL(gtk_builder_get_object(builder, "detail_pid_label"));
+    widgets->detail_name_label   = GTK_LABEL(gtk_builder_get_object(builder, "detail_name_label"));
+    widgets->detail_ram_label    = GTK_LABEL(gtk_builder_get_object(builder, "detail_ram_label"));
+    widgets->detail_cpu_label    = GTK_LABEL(gtk_builder_get_object(builder, "detail_cpu_label"));
+    widgets->detail_status_label = GTK_LABEL(gtk_builder_get_object(builder, "detail_status_label"));
+    widgets->kill_button         = GTK_BUTTON(gtk_builder_get_object(builder, "kill_button"));
+    widgets->force_kill_button   = GTK_BUTTON(gtk_builder_get_object(builder, "force_kill_button"));
+    widgets->overview_uptime_label = GTK_LABEL(gtk_builder_get_object(builder, "overview_uptime_label"));
+
+    widgets->cpu_usage_bar    = GTK_LEVEL_BAR(gtk_builder_get_object(builder, "cpu_usage_bar"));
+    widgets->memory_usage_bar = GTK_LEVEL_BAR(gtk_builder_get_object(builder, "memory_usage_bar"));
+    widgets->swap_usage_bar   = GTK_LEVEL_BAR(gtk_builder_get_object(builder, "swap_usage_bar"));
+
+    gtk_level_bar_add_offset_value(widgets->cpu_usage_bar, "warning", 75.0);
+    gtk_level_bar_add_offset_value(widgets->cpu_usage_bar, "critical", 90.0);
+    gtk_level_bar_add_offset_value(widgets->memory_usage_bar, "warning", 75.0);
+    gtk_level_bar_add_offset_value(widgets->memory_usage_bar, "critical", 90.0);
+    gtk_level_bar_add_offset_value(widgets->swap_usage_bar, "warning", 75.0);
+    gtk_level_bar_add_offset_value(widgets->swap_usage_bar, "critical", 90.0);
+
+    widgets->selected_detail_cpu = -1;
+    tracker_init(&widgets->detail_cpu_tracker);
+
+    g_signal_connect(widgets->kill_button, "clicked", G_CALLBACK(kill_button_clicked), widgets);
+    g_signal_connect(widgets->force_kill_button, "clicked", G_CALLBACK(force_kill_button_clicked), widgets);
 
     gtk_paned_set_position(widgets->paned,475);
     gtk_widget_set_hexpand(GTK_WIDGET(widgets->paned),TRUE);
@@ -99,11 +282,19 @@ static void gtkcall(GtkApplication *app, gpointer data){
         g_object_unref(obj);
         
     }
-    
-    GtkSingleSelection *selection = gtk_single_selection_new(G_LIST_MODEL(widgets->store));
+
+    setup_process_columnview(widgets->pid_view);
+
+    GtkSortListModel *sorted_model = gtk_sort_list_model_new(
+        G_LIST_MODEL(widgets->store),
+        g_object_ref(gtk_column_view_get_sorter(widgets->pid_view))
+    );
+
+    GtkSingleSelection *selection = gtk_single_selection_new(G_LIST_MODEL(sorted_model));
     widgets->selection = selection;
     gtk_column_view_set_model(widgets->pid_view,GTK_SELECTION_MODEL(selection));
-    setup_process_columnview(widgets->pid_view);
+
+    g_signal_connect(widgets->pid_view, "activate", G_CALLBACK(process_row_activated), widgets);
 
 
 
@@ -121,24 +312,6 @@ static void gtkcall(GtkApplication *app, gpointer data){
     setup_network_columnview(widgets->network_view);
 
 
-    GtkStringList *storage_list_model = gtk_string_list_new(NULL);
-    for(int i = 0; i < widgets->storage_device_count; i++){
-        char label[400];
-        snprintf(label,sizeof(label), "%s (%s)", widgets->storage_devices[i].mount_point,widgets->storage_devices[i].fs_type);
-        gtk_string_list_append(storage_list_model,label);
-    }
-
-    gtk_drop_down_set_model(widgets->storage_selector, G_LIST_MODEL(storage_list_model));
-    g_object_unref(storage_list_model);
-
-    gtk_drop_down_set_expression(widgets->storage_selector, gtk_property_expression_new(GTK_TYPE_STRING_OBJECT, NULL , "string"));
-    if(widgets->storage_device_count > 0){
-        snprintf(widgets->selected_storage_path, STORAGE_PATH_LEN, "%s",widgets->storage_devices[0].mount_point);
-        gtk_drop_down_set_selected(widgets->storage_selector, 0);
-
-    }
-
-    g_signal_connect(widgets->storage_selector, "notify::selected",G_CALLBACK(storage_selection_changed),widgets);
 
     g_timeout_add(1000, refresh_ui, widgets);
     g_timeout_add(3000, column_refresh, widgets);
@@ -147,6 +320,9 @@ static void gtkcall(GtkApplication *app, gpointer data){
 
 
     gtk_window_present(GTK_WINDOW(window));
+
+    gtk_paned_set_position(widgets->paned, 805);
+    gtk_paned_set_position(widgets->inner_paned, 480);
 
 }
 
@@ -164,5 +340,3 @@ int main(int argc, char *argv[]){
     return status;
 
 }
-
-
